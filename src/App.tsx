@@ -1,5 +1,6 @@
 import React from 'react';
 import './App.css';
+import Records from './features/score/Record';
 import { ScoreList } from './features/score/Score';
 
 function App() {
@@ -8,6 +9,7 @@ function App() {
       <header className="App-header">
         {/* <img src={logo} className="App-logo" alt="logo" /> */}
         {/* <Counter /> */}
+        <Records/>
         <ScoreList/>
         {/* <p>
           Edit <code>src/App.tsx</code> and save to reload.

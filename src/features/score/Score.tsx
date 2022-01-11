@@ -5,6 +5,8 @@ import Button from '@mui/material/Button';
 import Checkbox from '@mui/material/Checkbox';
 import IconButton from '@mui/material/IconButton';
 import Paper from '@mui/material/Paper';
+import { SelectChangeEvent } from '@mui/material/Select';
+import Stack from "@mui/material/Stack";
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -14,34 +16,52 @@ import TextField from '@mui/material/TextField';
 import React, { useEffect, useRef } from 'react';
 import { useSelector } from "react-redux";
 import { useAppDispatch } from "../../app/hooks";
-import { addRecord, checked, delRecord, Score, selectGPA, selectScores } from "./scoreSlice";
+import EnhancedTextField, { ValidateType } from '../../components/TextField';
+import { addCourse, checked, delCourse, saveRecord, Score, selectCourses, selectGPA, selectName, switchRecord } from "./scoreSlice";
 export function ScoreList({ }) {
-    const scoreList = useSelector(selectScores)
+    const courseList = useSelector(selectCourses)
     const GPA = useSelector(selectGPA)
+    const name = useSelector(selectName)
     const formEl = useRef<HTMLFormElement>();
-
+    const saveEl = useRef<HTMLFormElement>();
     const dispatch = useAppDispatch();
     useEffect(() => {
-        console.log("scoreList", scoreList)
-    }, [])
+        console.log("courseList", courseList)
+        console.log("selectName: ", name)
+    })
     const add = (e: React.MouseEvent<HTMLElement>) => {
         const formData = new FormData(formEl.current);
         const name = formData.get("course")?.toString();
         const credit = Number(formData.get("credit")?.toString());
         const score = Number(formData.get("score")?.toString());
-        if (isNaN(credit) || isNaN(score)) {
+        if (isNaN(credit) || isNaN(score) || !name || name?.length <= 0) {
+            alert("invalid input")
             return
         }
-        dispatch(addRecord({ name, credit, score, selected: true } as Score));
+        dispatch(addCourse({ name, credit, score, selected: true } as Score));
+    }
+    const saveCurRecord = (e: React.MouseEvent<HTMLElement>) => {
+        dispatch(saveRecord(name))
+    }
+    const save = (e: React.MouseEvent<HTMLElement>) => {
+        const formData = new FormData(saveEl.current);
+        const name = formData.get("recored_name")?.toString()
+        if (!name) {
+            return
+        }
+        dispatch(saveRecord(name))
     }
     const checkCourse = (index: number) => (e: React.ChangeEvent<HTMLElement>) => {
         dispatch(checked(index))
     }
     const deleteCourse = (index: number) => (e: React.MouseEvent<HTMLElement>) => {
-        dispatch(delRecord(index))
+        dispatch(delCourse(index))
+    }
+    const recordChange = (event: SelectChangeEvent<string>, child: React.ReactNode) => {
+        dispatch(switchRecord(event.target.value))
     }
     return (
-        <div>
+        <Box>
             <Box
                 ref={formEl}
                 component="form"
@@ -50,10 +70,13 @@ export function ScoreList({ }) {
                 }}
                 noValidate
                 autoComplete="on"
+                display={"flex"}
+                alignContent={"center"}
+                alignItems={"center"}
             >
-                <TextField id="outlined-basic" label="Course Name" name="course" variant="outlined" />
-                <TextField id="filled-basic" label="Credit" name="credit" variant="filled" />
-                <TextField id="standard-basic" label="Score" name="score" variant="standard" />
+                <TextField id="name" label="Course Name" name="course" variant="outlined" />
+                <EnhancedTextField id="score" label="Score" name="score" variant="outlined" validType={ValidateType.NUMBER} />
+                <EnhancedTextField id="credit" label="Credit" name="credit" variant="outlined" validType={ValidateType.NUMBER} />
                 <Button variant="outlined" color="success" onClick={e => add(e)}>
                     Add
                 </Button>
@@ -74,12 +97,18 @@ export function ScoreList({ }) {
                             <TableCell>
                                 Selected
                             </TableCell>
+                            <TableCell>
+                                Edit
+                            </TableCell>
+                            <TableCell>
+                                Delete
+                            </TableCell>
                         </TableRow>
 
                     </TableHead>
                     <TableBody>
                         {
-                            scoreList.map((score: Score, index: number) => {
+                            courseList.map((score: Score, index: number) => {
                                 return (
                                     <TableRow>
                                         <TableCell>
@@ -107,7 +136,34 @@ export function ScoreList({ }) {
                 </Table>
             </TableContainer>
 
-            <h3>GPA: {GPA}</h3>
-        </div>
+
+
+            <Box
+                ref={saveEl}
+                component="form"
+                sx={{
+                    '& > :not(style)': { m: 1, width: '100%' },
+                }}
+                noValidate
+                autoComplete="on"
+                display={"flex"}
+                alignContent={"center"}
+                alignItems={"center"}
+                
+            >
+                <Stack direction="row" spacing={2} alignItems={"center"}>
+                    <Button variant="outlined" color="success" onClick={e => saveCurRecord(e)} size='large'>
+                        Save this record
+                    </Button>
+                    <EnhancedTextField id="save-record" label="record name" name="recored_name" variant="outlined" validType={ValidateType.STRING} />
+                    <Button variant="outlined" color="success" onClick={e => save(e)}>
+                        Save
+                    </Button>
+                    <Button disabled variant="outlined" color="success"  >
+                        GPA: {GPA}
+                    </Button>
+                </Stack>
+            </Box>
+        </Box>
     )
 }
